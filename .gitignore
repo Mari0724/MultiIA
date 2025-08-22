@@ -1,0 +1,20 @@
+# Entornos virtuales
+venv/
+.env
+
+# Archivos compilados
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Configuración de IDE
+.vscode/
+.idea/
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Dependencias instaladas (solo mantenemos requirements.txt)
+*.egg-info/
