@@ -1,5 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from app.prediction.application.prediction_service import train_linear_model, predict_linear
+from app.prediction.application.prediction_service import (
+    train_linear_model, predict_linear,
+    train_logistic_model, predict_logistic
+)
 
 router = APIRouter()
 
@@ -15,5 +18,19 @@ def train_linear():
 def predict_linear_endpoint(x: float):
     try:
         return predict_linear(x)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Modelo no entrenado")
+
+
+
+# --- LOGÍSTICA ---
+@router.get("/logistic/train")
+def train_logistic():
+    return train_logistic_model()
+
+@router.get("/logistic/predict")
+def predict_logistic_endpoint(x1: float, x2: float):
+    try:
+        return predict_logistic(x1, x2)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Modelo no entrenado")

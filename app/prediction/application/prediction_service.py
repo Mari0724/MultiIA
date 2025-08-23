@@ -1,10 +1,11 @@
 from app.prediction.infrastructure.model_storage import save_model, load_model
-from app.prediction.domain.models import LinearRegressor
+from app.prediction.domain.models import LinearRegressor, LogisticRegressor
 import torch
 from torch import nn
 
 # Ruta donde se guardará el modelo entrenado
 MODEL_PATH = "app/prediction/infrastructure/models/linear_regression.pth"
+MODEL_PATH_LOGISTIC = "app/prediction/infrastructure/models/logistic_regression.pth"
 
 def train_linear_model():
     """
@@ -54,3 +55,39 @@ def predict_linear(x: float):
         # Convertimos x a tensor y hacemos la predicción
         y_pred = model(torch.tensor([[x]])).item()  # 🐱 gato mira dónde caerá la pelota
         return {"x": x, "y_pred": y_pred}  # 🔹 devolvemos la predicción
+
+
+
+
+# -------- LOGÍSTICA (nuevo) -------- #
+def train_logistic_model():
+    """
+    Entrena un modelo de clasificación binaria simple
+    """
+    # Datos ficticios: 200 puntos con 2 características (x1, x2)
+    x = torch.randn(200, 2)
+    # Etiquetas binarias: 0 o 1 (con probabilidad 0.5)
+    y = (x[:, 0] + x[:, 1] > 0).float().unsqueeze(1)
+
+    model = LogisticRegressor()
+    optim = torch.optim.SGD(model.parameters(), lr=0.1)
+    loss_fn = nn.BCELoss()  # Binary Cross-Entropy
+
+    for _ in range(300):
+        pred = model(x)
+        loss = loss_fn(pred, y)
+        optim.zero_grad()
+        loss.backward()
+        optim.step()
+
+    save_model(model, MODEL_PATH_LOGISTIC)
+    return {"message": "Modelo logístico entrenado", "loss": loss.item()}
+
+def predict_logistic(x1: float, x2: float):
+    model = load_model(LogisticRegressor, MODEL_PATH_LOGISTIC)
+    if model is None:
+        raise FileNotFoundError()
+    with torch.no_grad():
+        prob = model(torch.tensor([[x1, x2]])).item()
+        clase = 1 if prob >= 0.5 else 0
+        return {"x1": x1, "x2": x2, "probabilidad": prob, "clase": clase}
