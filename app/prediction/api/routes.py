@@ -23,6 +23,7 @@ def predict_linear_endpoint(x: float):
 
 
 
+
 # --- LOGÍSTICA ---
 @router.get("/logistic/train")
 def train_logistic():
