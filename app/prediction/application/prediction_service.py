@@ -1,21 +1,31 @@
-from app.prediction.infrastructure.model_storage import save_model, load_model
-from app.prediction.domain.models import LinearRegressor, LogisticRegressor
 import torch
 from torch import nn
+# 👉 Librería PyTorch para trabajar con tensores y redes neuronales.
+
 import math
 import os
+# 👉 Math = validaciones matemáticas (NaN, infinito).
+# 👉 OS = crear carpetas donde se guardan modelos y gráficas.
+
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
-import matplotlib
-matplotlib.use("Agg")   # 👈 backend sin GUI, evita Tkinter
-import matplotlib.pyplot as plt
+# 👉 Métricas de evaluación para el modelo logístico.
 
-# Función de validación profesional
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+# 👉 Librería para graficar pérdida, matrices de confusión, curva ROC.
+# 👉 "Agg" = modo sin interfaz gráfica (evita errores en servidor).
+
+from app.prediction.domain.models import LinearRegressor, LogisticRegressor
+from app.prediction.infrastructure.model_storage import save_model, load_model
+
+
+# ===================== FUNCIÓN DE VALIDACIÓN =====================
 
 def safe_float(value: float) -> float:
     """
     Convierte un número a float seguro para serialización JSON.
-    
     - Si el valor es NaN (Not a Number) o infinito → lanza un error.
     - Garantiza que las respuestas de la API sean válidas en JSON.
     """
@@ -23,48 +33,47 @@ def safe_float(value: float) -> float:
         raise ValueError(f"Valor no válido detectado: {value}")
     return float(value)
 
-# Rutas donde se guardarán los modelos
+# ===================== RUTAS DE MODELOS Y PLOTS =====================
 
 LINEAR_MODEL_PATH = "app/prediction/infrastructure/models/linear_regression.pth"
 LOGISTIC_MODEL_PATH = "app/prediction/infrastructure/models/logistic_regression.pth"
 PLOT_DIR = "app/prediction/infrastructure/plots"
 
-# Crear la carpeta plots si no existe
 os.makedirs(PLOT_DIR, exist_ok=True)
+# 👉 Se asegura de que la carpeta para guardar gráficas exista.
 
-# Regresión Lineal (peso ~ tamaño)
+
+# ===================== MODELO LINEAL =====================
 
 def train_linear_model():
     """
     Entrena un modelo de regresión lineal para predecir el **peso del gato**
     a partir de su **tamaño**.
-
-    Proceso:
-    1. Genera datos simulados (tamaño en cm entre 20–60).
-    2. Normaliza los datos para mejorar el entrenamiento.
-    3. Define modelo, optimizador (SGD) y función de pérdida (MSE).
-    4. Realiza 1000 iteraciones de entrenamiento.
-    5. Guarda el modelo entrenado y genera una gráfica de la pérdida.
-    
-    Retorna:
-    - Última pérdida (MSE y RMSE).
-    - Ruta de la gráfica de evolución de la pérdida.
     """
-    # Datos simulados: tamaño entre 20–60 cm
+    # --- 1. Datos simulados (20–60 cm, con ruido aleatorio) ---
     x_raw = torch.linspace(20, 60, 200).unsqueeze(1)
     x = (x_raw - x_raw.mean()) / x_raw.std()
-    y = 0.18 * x_raw - 2 + 0.5 * torch.randn(200, 1)
+    y = (
+        0.18 * x_raw - 2
+        + 0.5 * torch.randn(200, 1)  # ruido normal
+        + 0.02 * (x_raw**1.5) / 100  # curva ligera
+    )
 
-    # Definición de modelo, optimizador y función de pérdida
+    # --- 2. Modelo y entrenamiento ---
     model = LinearRegressor()
     optim = torch.optim.SGD(model.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
 
     losses = []
     for _ in range(1000):
-        pred = model(x)
-        loss = loss_fn(pred, y)
+        pred = model(x)             # predicciones
+        loss = loss_fn(pred, y)     # error MSE
 
+        """
+        Qué valida: Que la función de pérdida no explote y devuelva NaN.
+        Por qué: a veces el gradiente se descontrola y el modelo “revienta”.
+        Protege: el proceso de entrenamiento.
+        """
         if torch.isnan(loss):
             raise ValueError("El entrenamiento produjo NaN en la pérdida")
 
@@ -73,10 +82,10 @@ def train_linear_model():
         optim.step()
         losses.append(loss.item())
 
-    # Guardar modelo entrenado
+    # --- 3. Guardar modelo entrenado ---
     save_model(model, LINEAR_MODEL_PATH)
 
-    # Guardar gráfica de pérdida
+    # --- 4. Guardar gráfica de pérdidas ---
     plt.plot(losses)
     plt.xlabel("Epoch")
     plt.ylabel("MSE Loss")
@@ -85,6 +94,7 @@ def train_linear_model():
     plt.savefig(linear_plot_path)
     plt.close()
 
+    # --- 5. Retorno con métricas ---
     return {
         "message": "Modelo lineal entrenado (peso ~ tamaño)",
         "loss": safe_float(losses[-1]),
@@ -97,19 +107,18 @@ def train_linear_model():
 def predict_linear(size: float):
     """
     Predice el **peso de un gato** usando el modelo de regresión lineal entrenado.
-
-    - Entrada: tamaño del gato en cm (15–125).
-    - Normaliza la entrada y obtiene la predicción.
-    - Devuelve el peso estimado (mínimo 0.5 kg por realismo).
     """
+
+    # --- Validación de entrada ---
     if size < 15 or size > 125:
         raise ValueError("El tamaño debe estar entre 15 y 125 cm.")
 
+    # --- Cargar modelo ---
     model = load_model(LinearRegressor, LINEAR_MODEL_PATH)
     if model is None:
         raise FileNotFoundError("Modelo lineal no entrenado aún.")
 
-    # Normalización aproximada
+    # --- Normalizar entrada y predecir ---
     x_norm = (torch.tensor([[size]], dtype=torch.float32) - 40) / 10
 
     with torch.no_grad():
@@ -119,36 +128,28 @@ def predict_linear(size: float):
             "peso_pred_kg": safe_float(max(peso_pred, 0.5))  # mínimo 0.5 kg
         }
 
-# Regresión Logística (atrapa ratón o no)
-
+# ===================== MODELO LOGÍSTICO =====================
 def train_logistic_model():
     """
     Entrena un modelo de regresión logística para predecir si un gato atrapa un ratón.
-
-    Proceso:
-    1. Genera datos simulados (velocidad y energía).
-    2. Define etiquetas (1 si velocidad*energía > 3, sino 0).
-    3. Entrena el modelo con BCE (Binary Cross Entropy).
-    4. Evalúa métricas: accuracy, precision, recall, F1.
-    5. Genera gráficas de:
-        - Matriz de confusión.
-        - Curva ROC.
-    6. Guarda modelo y gráficas.
-    
-    Retorna:
-    - Última pérdida.
-    - Métricas de evaluación.
-    - Rutas de las gráficas.
     """
-    # Datos simulados
+    
+    # --- 1. Datos simulados ---
     velocidad = torch.rand(500, 1) * 10
     energia = torch.rand(500, 1)
-    y = ((velocidad * energia) > 3).float()
+    # Condición base: velocidad * energia
+    base = velocidad * energia
+
+    # Le agregamos ruido y una condición "difusa"
+    y = ((base + 0.5 * torch.randn(500, 1)) > 3).float()
+
     x = torch.cat([velocidad, energia], dim=1)
 
+    # --- 2. Modelo y entrenamiento ---
     model = LogisticRegressor()
     optim = torch.optim.SGD(model.parameters(), lr=0.1)
     loss_fn = nn.BCELoss()
+
 
     losses = []
     for _ in range(500):
@@ -159,18 +160,18 @@ def train_logistic_model():
         optim.step()
         losses.append(loss.item())
 
-    # Evaluación
+    # --- 3. Evaluación ---
     with torch.no_grad():
         y_pred_prob = model(x).numpy()
         y_pred_class = (y_pred_prob >= 0.5).astype(int)
 
-    # Métricas
+    # --- 4. Métricas ---
     acc = accuracy_score(y.numpy(), y_pred_class)
     prec = precision_score(y.numpy(), y_pred_class)
     rec = recall_score(y.numpy(), y_pred_class)
     f1 = f1_score(y.numpy(), y_pred_class)
 
-    # Matriz de confusión
+    # --- 5. Matriz de confusión ---
     cm = confusion_matrix(y.numpy(), y_pred_class)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
     disp.plot(cmap=plt.cm.Blues)
@@ -179,7 +180,7 @@ def train_logistic_model():
     plt.savefig(cm_plot_path)
     plt.close()
 
-    # Curva ROC
+    # --- 6. Curva ROC ---
     fpr, tpr, _ = roc_curve(y.numpy(), y_pred_prob)
     roc_auc = auc(fpr, tpr)
     plt.plot(fpr, tpr, color='blue', lw=2, label=f"ROC (AUC={roc_auc:.2f})")
@@ -192,7 +193,10 @@ def train_logistic_model():
     plt.savefig(roc_plot_path)
     plt.close()
 
+    # --- 7. Guardar modelo ---
     save_model(model, LOGISTIC_MODEL_PATH)
+
+    # --- 8. Retorno ---
     return {
         "message": "Modelo logístico entrenado (atrapa ratón)",
         "loss": safe_float(losses[-1]),
@@ -209,25 +213,24 @@ def train_logistic_model():
 def predict_logistic(x1: float, x2: float):
     """
     Predice si un gato atrapará un ratón usando el modelo de regresión logística.
-
-    - Entradas:
-        - x1: velocidad del gato en m/s (0–20).
-        - x2: nivel de energía (0–1).
-    - Validaciones: error si está fuera de rango.
-    - Salida:
-        - velocidad y energía ingresadas.
-        - probabilidad (0–1).
-        - clase (0 = no atrapa, 1 = atrapa).
     """
+
+    # --- Validación de entrada ---
     if x1 < 0 or x1 > 20:
         raise ValueError("La velocidad debe estar entre 0 y 20 m/s.")
     if x2 < 0 or x2 > 1:
         raise ValueError("La energía debe estar entre 0 y 1.")
 
+    # --- Cargar modelo ---
+    """
+    Qué valida: Que el modelo ya esté entrenado y guardado.
+    Por qué: si intentas predecir sin entrenar primero → lanza error claro.
+    """
     model = load_model(LogisticRegressor, LOGISTIC_MODEL_PATH)
     if model is None:
         raise FileNotFoundError("Modelo logístico no entrenado aún.")
 
+    # --- Predicción ---
     with torch.no_grad():
         prob = model(torch.tensor([[x1, x2]])).item()
         clase = 1 if prob >= 0.5 else 0
@@ -235,5 +238,5 @@ def predict_logistic(x1: float, x2: float):
             "velocidad": safe_float(x1),
             "energia": safe_float(x2),
             "probabilidad": safe_float(prob),
-            "clase": clase
-        }
+            "clase": clase # 0=no atrapa, 1=atrapa
+        } 
