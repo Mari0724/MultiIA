@@ -28,8 +28,7 @@ def create_app() -> FastAPI:
     app.include_router(nlp_router, prefix="/nlp", tags=["NLP"])
     app.include_router(vision_router, prefix="/vision", tags=["Visión"])
     app.include_router(recommendation_router, prefix="/recommendation", tags=["Recomendación"])
-    app.include_router(prediction_router, prefix="/prediction", tags=["Predicción"])
-
+    app.include_router(prediction_router)
     return app
 
 app = create_app()

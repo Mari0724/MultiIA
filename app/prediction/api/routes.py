@@ -63,6 +63,8 @@ def predict_linear_endpoint(
     except FileNotFoundError:
         # Si no existe un modelo entrenado previamente, retorna error 404
         raise HTTPException(status_code=404, detail="Modelo no entrenado")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # Regresión Logística
 
@@ -107,5 +109,6 @@ def predict_logistic_endpoint(
     try:
         return predict_logistic(x1, x2)
     except FileNotFoundError:
-        # Si no existe un modelo entrenado previamente, retorna error 404
         raise HTTPException(status_code=404, detail="Modelo no entrenado")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
