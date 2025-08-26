@@ -135,7 +135,7 @@ def train_logistic_model():
     """
     
     # --- 1. Datos simulados ---
-    velocidad = torch.rand(500, 1) * 10
+    velocidad = torch.rand(500, 1) * 20
     energia = torch.rand(500, 1)
     # Condición base: velocidad * energia
     base = velocidad * energia
