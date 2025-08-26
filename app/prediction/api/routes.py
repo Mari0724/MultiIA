@@ -4,23 +4,28 @@ from app.prediction.application.prediction_service import (
     train_logistic_model, predict_logistic
 )
 
+# Definición del router de FastAPI
+
+# Se define un router para agrupar las rutas relacionadas con predicciones.
+# Todas las rutas estarán bajo el prefijo "/prediction".
+# Además, se agrupan en la etiqueta "Predicción" para la documentación automática de Swagger.
+
 router = APIRouter(prefix="/prediction", tags=["Predicción"])  # 👈 agrupamos rutas bajo /prediction
 
+# Endpoint raíz
 
-# ------------------------------
-# 🌱 Endpoint raíz
-# ------------------------------
 @router.get("/", summary="Estado del API", response_description="Mensaje de bienvenida")
 def root():
     """
-    Devuelve un mensaje indicando que la API de predicciones está activa.
+    Endpoint raíz de la API de predicciones.
+    
+    Retorna un mensaje indicando que el servicio está activo.
+    Útil para verificar que el servidor corre correctamente.
     """
     return {"message": "Prediction API lista 🚀"}
 
+# Regresión Lineal
 
-# ------------------------------
-# 📈 Regresión Lineal
-# ------------------------------
 @router.get(
     "/linear/train",
     summary="Entrenar modelo lineal",
@@ -28,10 +33,11 @@ def root():
 )
 def train_linear():
     """
-    Entrena un modelo de **regresión lineal** para predecir el **peso del gato (kg)** a partir de su tamaño.
-
-    - **Datos simulados**: gatos de 20–60 cm
-    - **Salida**: pérdida final y métricas MSE
+    Entrena un modelo de **regresión lineal**.
+    
+    - **Objetivo**: Predecir el **peso de un gato (kg)** a partir de su tamaño.
+    - **Datos simulados**: tamaños de gatos entre 20–60 cm.
+    - **Salida**: métricas del entrenamiento, como error cuadrático medio (MSE) y pérdida final.
     """
     return train_linear_model()
 
@@ -45,21 +51,21 @@ def predict_linear_endpoint(
     x: float = Query(..., description="Tamaño del gato en cm (15–125)", example=42.0)
 ):
     """
-    Predice el **peso estimado** de un gato (en kg) a partir de su **tamaño en cm**.
+    Usa el modelo entrenado de regresión lineal para predecir el **peso de un gato**.
 
-    - **Input**: tamaño del gato en cm
-    - **Rango válido**: 15–125
-    - **Output**: JSON con métricas y peso estimado
+    - **Parámetro de entrada**:
+        - `x`: tamaño del gato en cm (valores entre 15 y 125).
+    - **Salida**:
+        - JSON con métricas y el peso estimado en kg.
     """
     try:
         return predict_linear(x)
     except FileNotFoundError:
+        # Si no existe un modelo entrenado previamente, retorna error 404
         raise HTTPException(status_code=404, detail="Modelo no entrenado")
 
+# Regresión Logística
 
-# ------------------------------
-# 🐭 Regresión Logística
-# ------------------------------
 @router.get(
     "/logistic/train",
     summary="Entrenar modelo logístico",
@@ -67,15 +73,15 @@ def predict_linear_endpoint(
 )
 def train_logistic():
     """
-    Entrena un modelo de **regresión logística** que predice si un gato atrapa un ratón.
-
-    - **Features**:
-        - velocidad (0–20 m/s)
-        - energía (0–1)
-    - **Output**: métricas como accuracy, precision, recall, f1_score
+    Entrena un modelo de **regresión logística**.
+    
+    - **Objetivo**: Predecir si un gato atrapa un ratón.
+    - **Características usadas (features)**:
+        - velocidad del gato (0–20 m/s)
+        - nivel de energía (0–1)
+    - **Salida**: métricas del modelo como accuracy, precision, recall y F1-score.
     """
     return train_logistic_model()
-
 
 @router.get(
     "/logistic/predict",
@@ -87,16 +93,19 @@ def predict_logistic_endpoint(
     x2: float = Query(..., description="Nivel de energía del gato (0–1)", example=0.7)
 ):
     """
-    Predice si un gato **atrapa un ratón** o no.
+    Usa el modelo entrenado de regresión logística para predecir si un gato atrapará un ratón.
 
-    - **Input**:
-        - velocidad (m/s) entre 0 y 20
-        - energía entre 0 y 1
-    - **Output**:
-        - probabilidad entre [0,1]
-        - clase: 0 = no atrapa, 1 = atrapa
+    - **Parámetros de entrada**:
+        - `x1`: velocidad en m/s (0–20).
+        - `x2`: nivel de energía (0–1).
+    - **Salida**:
+        - `probabilidad`: valor entre [0,1] indicando la confianza del modelo.
+        - `clase`: 
+            - 0 = no atrapa al ratón
+            - 1 = atrapa al ratón
     """
     try:
         return predict_logistic(x1, x2)
     except FileNotFoundError:
+        # Si no existe un modelo entrenado previamente, retorna error 404
         raise HTTPException(status_code=404, detail="Modelo no entrenado")
