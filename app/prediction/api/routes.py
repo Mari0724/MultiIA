@@ -39,7 +39,7 @@ def train_linear():
     - **Datos simulados**: tamaños de gatos entre 20–60 cm.
     - **Salida**: métricas del entrenamiento, como error cuadrático medio (MSE) y pérdida final.
     """
-    return train_linear_model()
+    return train_linear_model(save_plot=True)
 
 
 @router.get(
@@ -83,7 +83,7 @@ def train_logistic():
         - nivel de energía (0–1)
     - **Salida**: métricas del modelo como accuracy, precision, recall y F1-score.
     """
-    return train_logistic_model()
+    return train_logistic_model(save_plot=True)
 
 @router.get(
     "/logistic/predict",

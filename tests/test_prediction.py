@@ -1,20 +1,30 @@
 import pytest
 from fastapi.testclient import TestClient
 from main import app
+from app.prediction.application.prediction_service import (
+    train_linear_model,
+    train_logistic_model
+)
 
 client = TestClient(app)
 
-# TEST LINEAR
+# ==================== TEST REGRESIÓN LINEAL ====================
+
 def test_train_linear():
-    response = client.get("/prediction/linear/train")
-    assert response.status_code == 200
-    data = response.json()
+    """
+    Entrena el modelo lineal SIN guardar gráficas.
+    Verifica que la pérdida sea un valor válido.
+    """
+    data = train_linear_model(save_plot=False)  # 👈 evita sobrescribir imágenes
     assert "loss" in data
-    assert data["loss"] >= 0  # el loss no debería ser negativo
+    assert data["loss"] >= 0
 
 def test_predict_linear():
-    # primero entrenamos el modelo
-    client.get("/prediction/linear/train")
+    """
+    Usa el endpoint de predicción para validar el modelo lineal.
+    """
+    # aseguramos que el modelo esté entrenado
+    train_linear_model(save_plot=False)
 
     # predicción válida
     response = client.get("/prediction/linear/predict", params={"x": 40})
@@ -23,22 +33,30 @@ def test_predict_linear():
     assert "peso_pred_kg" in data
     assert "tamaño_cm" in data
 
-    # predicción inválida
+    # predicción inválida (fuera de rango)
     response = client.get("/prediction/linear/predict", params={"x": 200})
     assert response.status_code in (400, 422)
 
-# TEST LOGISTIC
+
+# ==================== TEST REGRESIÓN LOGÍSTICA ====================
+
 def test_train_logistic():
-    response = client.get("/prediction/logistic/train")
-    assert response.status_code == 200
-    data = response.json()
+    """
+    Entrena el modelo logístico SIN guardar gráficas.
+    Verifica métricas de pérdida y exactitud.
+    """
+    data = train_logistic_model(save_plot=False)  # 👈 evita sobrescribir imágenes
     assert "loss" in data
     assert "accuracy" in data
-    assert 0 <= data["accuracy"] <= 1  # accuracy siempre entre 0 y 1
+    assert 0 <= data["accuracy"] <= 1
+
 
 def test_predict_logistic():
-    # primero entrenamos
-    client.get("/prediction/logistic/train")
+    """
+    Usa el endpoint de predicción para validar el modelo logístico.
+    """
+    # aseguramos que el modelo esté entrenado
+    train_logistic_model(save_plot=False)
 
     # predicción válida
     response = client.get("/prediction/logistic/predict", params={"x1": 5, "x2": 0.5})

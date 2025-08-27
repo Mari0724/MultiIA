@@ -45,7 +45,7 @@ os.makedirs(PLOT_DIR, exist_ok=True)
 
 # ===================== MODELO LINEAL =====================
 
-def train_linear_model():
+def train_linear_model(save_plot: bool = True):
     """
     Entrena un modelo de regresión lineal para predecir el **peso del gato**
     a partir de su **tamaño**.
@@ -83,16 +83,19 @@ def train_linear_model():
         losses.append(loss.item())
 
     # --- 3. Guardar modelo entrenado ---
-    save_model(model, LINEAR_MODEL_PATH)
+    if save_plot: 
+        save_model(model, LINEAR_MODEL_PATH)
 
     # --- 4. Guardar gráfica de pérdidas ---
-    plt.plot(losses)
-    plt.xlabel("Epoch")
-    plt.ylabel("MSE Loss")
-    plt.title("Evolución de la pérdida (Lineal)")
-    linear_plot_path = os.path.join(PLOT_DIR, "linear_loss.png")
-    plt.savefig(linear_plot_path)
-    plt.close()
+    linear_plot_path = os.path.join(PLOT_DIR, "linear_loss.png") if save_plot else None
+    if save_plot:  # 👈 solo guarda si lo pedimos
+        plt.plot(losses)
+        plt.xlabel("Epoch")
+        plt.ylabel("MSE Loss")
+        plt.title("Evolución de la pérdida (Lineal)")
+        linear_plot_path = os.path.join(PLOT_DIR, "linear_loss.png")
+        plt.savefig(linear_plot_path)
+        plt.close()
 
     # --- 5. Retorno con métricas ---
     return {
@@ -129,7 +132,7 @@ def predict_linear(size: float):
         }
 
 # ===================== MODELO LOGÍSTICO =====================
-def train_logistic_model():
+def train_logistic_model(save_plot: bool = True):
     """
     Entrena un modelo de regresión logística para predecir si un gato atrapa un ratón.
     """
@@ -171,30 +174,35 @@ def train_logistic_model():
     rec = recall_score(y.numpy(), y_pred_class)
     f1 = f1_score(y.numpy(), y_pred_class)
 
-    # --- 5. Matriz de confusión ---
-    cm = confusion_matrix(y.numpy(), y_pred_class)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot(cmap=plt.cm.Blues)
-    plt.title("Matriz de Confusión (Logístico)")
-    cm_plot_path = os.path.join(PLOT_DIR, "logistic_confusion.png")
-    plt.savefig(cm_plot_path)
-    plt.close()
+       # --- Gráficas y guardado opcionales ---
+    cm_plot_path = None
+    roc_plot_path = None
 
-    # --- 6. Curva ROC ---
-    fpr, tpr, _ = roc_curve(y.numpy(), y_pred_prob)
-    roc_auc = auc(fpr, tpr)
-    plt.plot(fpr, tpr, color='blue', lw=2, label=f"ROC (AUC={roc_auc:.2f})")
-    plt.plot([0,1],[0,1],'--', color='gray')
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.title("Curva ROC (Logístico)")
-    plt.legend(loc="lower right")
-    roc_plot_path = os.path.join(PLOT_DIR, "logistic_roc.png")
-    plt.savefig(roc_plot_path)
-    plt.close()
+    if save_plot:
+        # --- 5. Matriz de confusión ---
+        cm = confusion_matrix(y.numpy(), y_pred_class)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot(cmap=plt.cm.Blues)
+        plt.title("Matriz de Confusión (Logístico)")
+        cm_plot_path = os.path.join(PLOT_DIR, "logistic_confusion.png")
+        plt.savefig(cm_plot_path)
+        plt.close()
 
-    # --- 7. Guardar modelo ---
-    save_model(model, LOGISTIC_MODEL_PATH)
+        # --- 6. Curva ROC ---
+        fpr, tpr, _ = roc_curve(y.numpy(), y_pred_prob)
+        roc_auc = auc(fpr, tpr)
+        plt.plot(fpr, tpr, color='blue', lw=2, label=f"ROC (AUC={roc_auc:.2f})")
+        plt.plot([0,1],[0,1],'--', color='gray')
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title("Curva ROC (Logístico)")
+        plt.legend(loc="lower right")
+        roc_plot_path = os.path.join(PLOT_DIR, "logistic_roc.png")
+        plt.savefig(roc_plot_path)
+        plt.close()
+
+        # --- 7. Guardar modelo ---
+        save_model(model, LOGISTIC_MODEL_PATH)
 
     # --- 8. Retorno ---
     return {
