@@ -25,7 +25,7 @@ def create_app() -> FastAPI:
     from app.prediction.api.routes import router as prediction_router
 
     # Incluye routers
-    app.include_router(nlp_router, prefix="/nlp", tags=["NLP"])
+    app.include_router(nlp_router)
     app.include_router(vision_router, prefix="/vision", tags=["Visión"])
     app.include_router(recommendation_router, prefix="/recommendation", tags=["Recomendación"])
     app.include_router(prediction_router)

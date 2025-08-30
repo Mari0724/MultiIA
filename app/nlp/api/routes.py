@@ -1,11 +1,45 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.nlp.infrastructure.db import SessionLocal
+from app.nlp.application.comentario_service import (
+    crear_comentario, listar_comentarios, obtener_comentario, eliminar_comentario
+)
+from app.nlp.domain.schemas import ComentarioCreate, ComentarioResponse
 
-router = APIRouter()
+router = APIRouter(prefix="/nlp", tags=["NLP"])
 
-@router.get("/")
-def read_root():
-    return {"message": "Bienvenida a NeoAI 🚀"}
+# Dependencia: abre y cierra sesión por request
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
-@router.get("/ping")
-def ping():
-    return {"pong": True}
+@router.post("/", response_model=ComentarioResponse)
+def api_crear_comentario(
+    comentario: ComentarioCreate,  # 👈 ahora llega un JSON
+    db: Session = Depends(get_db)
+):
+    return crear_comentario(db, comentario.texto, comentario.sentimiento, comentario.resumen)
+
+@router.get("/", response_model=list[ComentarioResponse])
+def api_listar_comentarios(db: Session = Depends(get_db)):
+    return listar_comentarios(db)
+
+@router.get("/{comentario_id}", response_model=ComentarioResponse)
+def api_obtener_comentario(comentario_id: int, db: Session = Depends(get_db)):
+    comentario = obtener_comentario(db, comentario_id)
+    if not comentario:
+        raise HTTPException(status_code=404, detail="Comentario no encontrado")
+    return comentario
+
+@router.delete("/{comentario_id}")
+def api_eliminar_comentario(comentario_id: int, db: Session = Depends(get_db)):
+    comentario = eliminar_comentario(db, comentario_id)
+    if not comentario:
+        raise HTTPException(status_code=404, detail="Comentario no encontrado")
+    return {"message": "Comentario eliminado", "id": comentario_id}
