@@ -1,53 +1,46 @@
 from sqlalchemy.orm import Session
 from app.nlp.domain.models import Comentario
+from app.nlp.application.sentiment_service import analizar_sentimiento  # 👈 Importamos el modelo
 
 def crear_comentario(db: Session, texto: str, sentimiento: str = None, resumen: str = None):
     """
     Crea un nuevo comentario en la base de datos.
+    Si no se pasa sentimiento, lo calcula automáticamente usando el modelo.
     """
+    # Si no viene sentimiento manual, lo calculamos
+    if not sentimiento:
+        sentimiento = analizar_sentimiento(texto)
+
     # 1) Creamos un objeto Comentario (aún NO está en la BD)
     nuevo = Comentario(texto=texto, sentimiento=sentimiento, resumen=resumen)
 
-    # 2) Lo agregamos a la sesión (cajita de arena)
+    # 2) Lo agregamos a la sesión
     db.add(nuevo)
 
-    # 3) Enviamos los cambios a la BD (lo guardamos de verdad)
+    # 3) Guardamos en la BD
     db.commit()
 
-    # 4) Refrescamos para que tenga valores generados por la BD (id, fecha)
+    # 4) Refrescamos para obtener ID y fecha generados
     db.refresh(nuevo)
 
-    # 5) Lo devolvemos (ya con id y fecha)
+    # 5) Lo devolvemos
     return nuevo
 
 
 def listar_comentarios(db: Session):
-    """
-    Lista todos los comentarios.
-    """
-    # SELECT * FROM comentarios;
+    """Lista todos los comentarios."""
     return db.query(Comentario).all()
 
 
 def obtener_comentario(db: Session, comentario_id: int):
-    """
-    Obtiene un comentario por su ID.
-    """
-    # SELECT * FROM comentarios WHERE id = :id LIMIT 1;
+    """Obtiene un comentario por su ID."""
     return db.query(Comentario).filter(Comentario.id == comentario_id).first()
 
 
 def eliminar_comentario(db: Session, comentario_id: int):
-    """
-    Elimina un comentario por ID (delete físico).
-    """
-    # 1) Buscamos el comentario
+    """Elimina un comentario por ID."""
     comentario = db.query(Comentario).filter(Comentario.id == comentario_id).first()
-
-    # 2) Si existe, lo borramos
     if comentario:
-        db.delete(comentario)  # Marca el objeto para eliminar
-        db.commit()            # Ejecuta DELETE en la BD
-
-    # 3) Devolvemos el que se eliminó (o None si no existía)
+        db.delete(comentario)
+        db.commit()
     return comentario

@@ -15,5 +15,5 @@ class ComentarioResponse(BaseModel):
     resumen: str | None = None
     fecha: datetime
 
-    class Config:
-        orm_mode = True  # permite convertir de SQLAlchemy a Pydantic
+class Config:
+    from_attributes = True
