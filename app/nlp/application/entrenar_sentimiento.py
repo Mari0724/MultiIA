@@ -1,3 +1,4 @@
+# app/nlp/application/train_sentiment.py
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
 import numpy as np
@@ -17,19 +18,13 @@ mapa = {
     "sadness": "Triste"
 }
 
-# definimos al inicio, después de cargar dataset
 label_names = dataset["train"].features["labels"].feature.names
 
 def simplificar_etiqueta(example):
     etiquetas = example["labels"]
-
-    if not etiquetas:  # Si está vacío
+    if not etiquetas:
         return {"labels": label2id["Neutral"]}
-
-    # Tomamos la primera etiqueta (GoEmotions es multilabel)
     emocion = label_names[etiquetas[0]]
-
-    # Mapeamos a nuestras 4 clases
     clase = mapa.get(emocion, "Neutral")
     return {"labels": label2id[clase]}
 
@@ -51,7 +46,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
     label2id=label2id
 )
 
-# 4) Funciones métricas
+# 4) Métricas
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=-1)
@@ -63,8 +58,8 @@ def compute_metrics(eval_pred):
 # 5) Entrenamiento
 training_args = TrainingArguments(
     output_dir="./sentiment_model",
-    evaluation_strategy="epoch",   # 👈 evaluación al final de cada época
-    save_strategy="epoch",         # 👈 guarda modelo cada época
+    evaluation_strategy="epoch",
+    save_strategy="epoch",
     logging_dir="./logs",
     num_train_epochs=2,
     per_device_train_batch_size=16,
@@ -76,14 +71,14 @@ training_args = TrainingArguments(
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=dataset_token["train"].select(range(2000)),  # ⚡ dataset reducido
+    train_dataset=dataset_token["train"].select(range(2000)), 
     eval_dataset=dataset_token["validation"].select(range(500)),
     tokenizer=tokenizer,
     compute_metrics=compute_metrics
 )
 
-trainer.train()
-
-# 👇 Guardar modelo completo con tokenizer y config
-model.save_pretrained("./sentiment_model")
-tokenizer.save_pretrained("./sentiment_model")
+if __name__ == "__main__":
+    trainer.train()
+    model.save_pretrained("./sentiment_model")
+    tokenizer.save_pretrained("./sentiment_model")
+    print("✅ Modelo y tokenizer guardados en ./sentiment_model")
