@@ -4,7 +4,9 @@ from app.nlp.infrastructure.db import SessionLocal
 from app.nlp.application.comentario_service import (
     crear_comentario, listar_comentarios, obtener_comentario, eliminar_comentario
 )
-from app.nlp.domain.schemas import ComentarioCreate, ComentarioResponse
+from app.nlp.domain.schemas import ComentarioCreate, ComentarioResponse, TextoResumen
+from fastapi import APIRouter, Depends
+from app.nlp.application.summary_service import resumir_texto
 
 router = APIRouter(prefix="/nlp", tags=["NLP"])
 
@@ -43,3 +45,13 @@ def api_eliminar_comentario(comentario_id: int, db: Session = Depends(get_db)):
     if not comentario:
         raise HTTPException(status_code=404, detail="Comentario no encontrado")
     return {"message": "Comentario eliminado", "id": comentario_id}
+
+@router.post("/resumen")
+def generar_resumen(payload: TextoResumen):
+    """
+    Genera un resumen a partir de un texto largo en español.
+    """
+    if not payload.texto:
+        raise HTTPException(status_code=400, detail="Debes enviar un texto para resumir")
+
+    return resumir_texto(payload.texto)  # 👈 devolvemos directo

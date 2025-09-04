@@ -17,3 +17,6 @@ class ComentarioResponse(BaseModel):
 
 class Config:
     from_attributes = True
+
+class TextoResumen(BaseModel):
+    texto: str
