@@ -1,14 +1,18 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+from pysentimiento import create_analyzer
 
-# 📌 Usamos el modelo entrenado
-MODEL_PATH = "./sentiment_model"
+# 📌 Cargamos el analizador de sentimientos ya preentrenado
+analyzer = create_analyzer(task="sentiment", lang="es")
 
-print("🔍 Cargando modelo de sentimiento entrenado...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
-
-sentiment_pipeline = pipeline("text-classification", model=model, tokenizer=tokenizer)
+# 📌 Mapeamos a nuestras categorías personalizadas
+MAPEO = {
+    "POS": "Feliz",
+    "NEG": "Negativo",
+    "NEU": "Neutral"
+}
 
 def analizar_sentimiento(texto: str) -> str:
-    resultado = sentiment_pipeline(texto)[0]
-    return resultado["label"]  # "Feliz", "Triste", "Enojado", "Neutral"
+    """
+    Analiza el sentimiento de un texto y lo traduce a nuestras categorías.
+    """
+    resultado = analyzer.predict(texto)
+    return MAPEO.get(resultado.output, "Neutral")
