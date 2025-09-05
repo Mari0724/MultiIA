@@ -24,8 +24,11 @@ async def detect_objects(file: UploadFile = File(...)):
         with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # Detectar objetos (el servicio guardará la imagen procesada en app/vision/uploads/processed)
-        result = service.detect_objects(str(temp_path))
+        try:
+            result = service.detect_objects(str(temp_path))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
         return result
 
     finally:
