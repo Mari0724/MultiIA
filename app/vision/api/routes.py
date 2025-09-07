@@ -3,9 +3,11 @@ import shutil
 import os
 from pathlib import Path
 from app.vision.application.vision_service import VisionService
+from vision.application.pneumonia_service import PneumoniaService
 
 router = APIRouter(prefix="/vision", tags=["Vision"])
 service = VisionService()
+service = PneumoniaService()
 
 # 📂 app/vision como base
 VISION_DIR = Path(__file__).resolve().parents[1]  # .../app/vision
@@ -38,3 +40,8 @@ async def detect_objects(file: UploadFile = File(...)):
                 os.remove(temp_path)
         except Exception:
             pass
+
+@router.post("/analyze")
+async def analyze_xray(file: UploadFile = File(...)):
+    result = service.analyze_xray(file, file.filename)
+    return result
