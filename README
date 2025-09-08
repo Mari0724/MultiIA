@@ -1,0 +1,86 @@
+# 📌 Configuración de Dataset Kaggle – Neumonía
+
+Este proyecto utiliza el dataset público de **radiografías de tórax con y sin neumonía** de Kaggle:
+👉 [Chest X-Ray Images (Pneumonia)](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia)
+
+---
+
+## ⚙️ 1. Instalar dependencias
+
+En tu entorno virtual, instala estas librerías:
+
+```bash
+pip install kaggle python-dotenv
+```
+
+---
+
+## 🔑 2. Configurar credenciales de Kaggle
+
+1. En este proyecto ya existe un archivo `.env` con estas variables:
+
+```env
+KAGGLE_USERNAME=tu_usuario
+KAGGLE_KEY=tu_api_key
+```
+
+*(Asegúrate de pedirle a un compañero el `.env` porque **no está en GitHub**).*
+
+2. Generar automáticamente el archivo `kaggle.json` ejecutando:
+
+```bash
+python app/vision/utils/setup_kaggle.py
+```
+
+Esto creará `~/.kaggle/kaggle.json` en tu máquina.
+✅ Con este archivo ya podrás usar el comando `kaggle`.
+
+---
+
+## 📥 3. Descargar dataset de radiografías
+
+Ejecuta en la raíz del proyecto:
+
+```bash
+kaggle datasets download -d paultimothymooney/chest-xray-pneumonia -p app/vision/data --unzip
+```
+
+Esto hará:
+
+* Descargar el dataset
+* Guardarlo en `app/vision/data`
+* Descomprimirlo automáticamente
+
+---
+
+## 📂 4. Verificar estructura
+
+Al terminar, deberías tener esta estructura:
+
+```
+app/
+ └── vision/
+      ├── data/
+      │    └── chest_xray/
+      │         ├── train/
+      │         ├── val/
+      │         └── test/
+      ├── domain/
+      ├── utils/
+      └── ...
+```
+
+---
+
+## 🚀 5. Listo para entrenar
+
+Con esto ya puedes:
+
+* Entrenar el modelo de neumonía
+* Validar imágenes
+* Usar los servicios de predicción
+
+---
+
+👉 Recomendación: **No subas la carpeta `data/` a GitHub**, ya está en `.gitignore` porque pesa varios GB.
+
