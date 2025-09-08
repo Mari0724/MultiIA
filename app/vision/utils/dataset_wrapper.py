@@ -1,6 +1,7 @@
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
-from vision.utils.preprocess import preprocess_image
+from app.vision.utils.preprocess import preprocess_image
+from pathlib import Path
 
 class CustomDataset(ImageFolder):
     def __init__(self, root, transform=None):
@@ -11,10 +12,15 @@ class CustomDataset(ImageFolder):
         tensor = preprocess_image(path, for_batch=False)  # sin batch
         return tensor, label
 
-def get_loaders(data_dir="vision/data/chest_xray", batch_size=32):
-    train_dataset = CustomDataset(root=f"{data_dir}/train")
-    val_dataset = CustomDataset(root=f"{data_dir}/val")
-    test_dataset = CustomDataset(root=f"{data_dir}/test")
+
+def get_loaders(batch_size=32):
+    # 📌 Construir ruta absoluta al dataset
+    BASE_DIR = Path(__file__).resolve().parent.parent  # app/vision
+    data_dir = BASE_DIR / "data" / "chest_xray"
+
+    train_dataset = CustomDataset(root=data_dir / "train")
+    val_dataset = CustomDataset(root=data_dir / "val")
+    test_dataset = CustomDataset(root=data_dir / "test")
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
