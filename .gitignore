@@ -21,3 +21,8 @@ __pycache__/
 
 # Ignorar modelo entrenado 
 sentiment_model/
+
+# Vision data
+app/vision/data/
+app/vision/uploads/
+app/vision/models/
