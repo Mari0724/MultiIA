@@ -4,7 +4,7 @@ from app.vision.domain.vision_interface import DetectorInterface
 import os
 
 class YoloDetector(DetectorInterface):
-    def __init__(self, model_name: str = "yolov8n.pt"):
+    def __init__(self, model_name: str = "app/vision/infrastructure/model/yolov8n.pt"):
         print("🔍 Cargando modelo YOLO...")
         self.model = YOLO(model_name)
 
