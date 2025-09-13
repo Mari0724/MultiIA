@@ -18,5 +18,21 @@ class ComentarioResponse(BaseModel):
 class Config:
     from_attributes = True
 
+# 📝 Para recibir mensajes de chat (request)
+class ChatMessageCreate(BaseModel):
+    session_id: str # 👈 necesario para continuar conversación
+    text: str  # 👈 ahora sí coincide
+
+# 📤 Para devolver mensajes de chat (response)
+class ChatMessageResponse(BaseModel):
+    id: int
+    sender: str
+    message: str
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+# 📋 Para servicio de resumen
 class TextoResumen(BaseModel):
     texto: str

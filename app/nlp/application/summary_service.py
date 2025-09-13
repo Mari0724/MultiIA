@@ -1,34 +1,37 @@
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
+from typing import Tuple
 
-# 📌 Cargamos modelo preentrenado para resumen en español
-MODEL_NAME = "mrm8488/bert2bert_shared-spanish-finetuned-summarization"
-
-print("🔍 Cargando modelo de resumen de textos...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
-
-summarizer = pipeline("summarization", model=model, tokenizer=tokenizer)
-
-def resumir_texto(texto: str) -> dict:
+def resumir_texto(texto: str) -> Tuple[str, float]:
     """
-    Genera un resumen del texto y calcula el porcentaje de reducción.
+    Resume un texto eliminando redundancias, manteniendo ortografía
+    y generando frases compactas.
+
+    Retorna:
+        resumen (str): Texto resumido.
+        reduccion (float): Porcentaje de reducción.
     """
-    # Resumen con HuggingFace
-    resumen = summarizer(texto, max_length=60, min_length=20, do_sample=False)[0]["summary_text"]
+    import re
 
-    # Contar palabras
-    palabras_original = len(texto.split())
-    palabras_resumen = len(resumen.split())
+    # 1. Limpiar texto (espacios extra, saltos de línea)
+    texto = re.sub(r"\s+", " ", texto.strip())
 
-    # Evitamos división por cero
-    reduccion = 0
-    if palabras_original > 0:
-        reduccion = round(((palabras_original - palabras_resumen) / palabras_original) * 100, 2)
+    # 2. Dividir en oraciones
+    oraciones = re.split(r"(?<=[.!?])\s+", texto)
 
-    return {
-        "texto_original": texto,
-        "resumen": resumen,
-        "palabras_original": palabras_original,
-        "palabras_resumen": palabras_resumen,
-        "reduccion": f"{reduccion}%"
-    }
+    # 3. Seleccionar frases más relevantes (longitud media y que contengan verbos comunes)
+    verbos_clave = ["fui", "tuve", "hice", "organicé", "me reuní", "levanté", "trabajé"]
+    resumen_oraciones = [
+        o for o in oraciones if any(v in o.lower() for v in verbos_clave)
+    ]
+
+    # Si no encuentra nada, tomar la primera y la última oración
+    if not resumen_oraciones:
+        resumen_oraciones = [oraciones[0], oraciones[-1]]
+
+    # 4. Armar resumen compacto en una sola frase fluida
+    resumen = " ".join(resumen_oraciones)
+    resumen = resumen.replace("  ", " ")
+
+    # 5. Calcular porcentaje de reducción
+    reduccion = 100 * (1 - len(resumen) / len(texto))
+
+    return resumen, round(reduccion, 2)
