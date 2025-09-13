@@ -1,10 +1,7 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 class SimpleCNN(nn.Module):
-    """CNN simple para clasificar neumonía en radiografías de tórax."""
-
     def __init__(self):
         super(SimpleCNN, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
@@ -16,7 +13,6 @@ class SimpleCNN(nn.Module):
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 64 * 56 * 56)
+        x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
-        x = torch.sigmoid(self.fc2(x))
-        return x
+        return self.fc2(x)  # <-- Sin sigmoid, lo maneja BCEWithLogitsLoss

@@ -6,7 +6,6 @@ from pathlib import Path
 from app.vision.application.vision_service import VisionService
 from app.vision.application.pneumonia_service import PneumoniaService
 from app.vision.training.train_pneumonia import train_pneumonia_model
-from app.vision.training.train_organ import train_organ_model
 
 router = APIRouter(
     prefix="/vision",
@@ -68,7 +67,7 @@ async def analyze_xray(file: UploadFile = File(..., description="Radiografía a 
     Recibe una imagen de rayos X y devuelve si hay indicios de neumonía
     según el modelo entrenado.
     """
-    return pneumonia_service.analyze_xray(file, file.filename)
+    return await pneumonia_service.analyze_xray(file, file.filename)
 
 
 # 📈 MÉTRICAS NEUMONÍA
@@ -105,37 +104,3 @@ async def train_pneumonia(
     """
     train_pneumonia_model(epochs=epochs, lr=lr)
     return {"message": f"Modelo de neumonía reentrenado por {epochs} épocas"}
-
-
-# 🧠 ENTRENAR MODELO ÓRGANOS
-@router.post(
-    "/train-organ",
-    summary="🧠 Reentrenar modelo de órganos/tórax",
-    description="Entrena o reentrena el clasificador general para detectar si es tórax u otro órgano."
-)
-async def train_organ(
-    epochs: int = Query(5, description="Número de épocas de entrenamiento"),
-    lr: float = Query(0.001, description="Tasa de aprendizaje")
-):
-    """
-    Entrena el modelo OrganClassifier, genera su gráfica y guarda el modelo.
-    """
-    train_organ_model(epochs=epochs, lr=lr)
-    return {"message": f"Modelo de órgano reentrenado por {epochs} épocas"}
-
-
-# 📊 MÉTRICAS ÓRGANOS
-@router.get(
-    "/training-metrics-organ",
-    summary="📊 Ver métricas de entrenamiento de órgano",
-    description="Devuelve la gráfica con las pérdidas del clasificador de órgano."
-)
-async def get_organ_metrics():
-    """
-    Devuelve la gráfica `organ_training.png` con las curvas de pérdida
-    del entrenamiento del clasificador de órgano.
-    """
-    plot_path = PLOTS_DIR / "organ_training.png"
-    if not os.path.exists(plot_path):
-        raise HTTPException(status_code=404, detail="No hay métricas de órgano aún")
-    return FileResponse(str(plot_path))

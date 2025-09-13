@@ -29,7 +29,7 @@ def train_pneumonia_model(epochs=5, lr=0.001):
     model = SimpleCNN().to(device)
 
     # 3. Loss y optimizador
-    criterion = nn.BCELoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
     train_losses, val_losses, val_accuracies = [], [], []
@@ -60,8 +60,9 @@ def train_pneumonia_model(epochs=5, lr=0.001):
                 outputs = model(inputs)
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
+                probs = torch.sigmoid(outputs)
+                preds = (probs > 0.5).int()
 
-                preds = (outputs > 0.5).int()
                 correct += (preds == labels.int()).sum().item()
                 total += labels.size(0)
 

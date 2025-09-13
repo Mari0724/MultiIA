@@ -6,17 +6,12 @@ from torchvision import transforms
 def preprocess_image(file_path: str, target_size=(224, 224), for_batch: bool = True):
     img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
     img = cv2.resize(img, target_size)
-    img = img / 255.0  # Escalar a [0,1]
+    img = img / 255.0
+    img = (img - 0.5) / 0.5  # Normalizar a [-1,1]
 
-    # Normalización estándar
-    mean = 0.5
-    std = 0.5
-    img = (img - mean) / std  # Escalar a [-1,1]
+    img = np.expand_dims(img, axis=0)  # [1,H,W] canal único
 
-    # Expandir canal (grayscale → 1 canal)
-    img = np.expand_dims(img, axis=0)  # [1,H,W]
-
+    tensor = torch.tensor(img, dtype=torch.float32)
     if for_batch:
-        img = np.expand_dims(img, axis=0)  # [1,1,H,W]
-
-    return torch.tensor(img, dtype=torch.float32)
+        tensor = tensor.unsqueeze(0)  # [1,1,H,W]
+    return tensor

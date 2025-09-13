@@ -21,10 +21,16 @@ class PneumoniaRepository:
         self.raw_dir.mkdir(parents=True, exist_ok=True)
         self.proc_dir.mkdir(parents=True, exist_ok=True)
 
-    def save_raw(self, file, filename: str) -> str:
+    async def save_raw(self, file, filename: str) -> Path:
+        """Guarda archivo subido en la carpeta raw."""
         file_path = self.raw_dir / filename
+
+        # 👇 Leer contenido de UploadFile (async)
+        content = await file.read()
+
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file, buffer)
+            buffer.write(content)
+
         return str(file_path)
 
     def save_processed(self, image, filename: str) -> str:
