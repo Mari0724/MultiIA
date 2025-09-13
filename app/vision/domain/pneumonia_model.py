@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-class SimpleCNN(nn.Module):
+class SimpleCNN(nn.Module):  #Hereda de nn.Module → lo que significa que esta clase es un modelo entrenable de PyTorch.
     def __init__(self):
         super(SimpleCNN, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)

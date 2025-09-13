@@ -1,4 +1,3 @@
-# app/vision/application/pneumonia_service.py
 from pathlib import Path
 import torch
 import cv2

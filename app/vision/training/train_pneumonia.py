@@ -1,11 +1,9 @@
-# app/vision/training/train_pneumonia.py
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from app.vision.domain.pneumonia_model import SimpleCNN
 from app.vision.utils.dataset_wrapper import get_loaders
 from pathlib import Path
-import os
 import matplotlib.pyplot as plt
 
 def train_pneumonia_model(epochs=5, lr=0.001):
