@@ -99,7 +99,11 @@ async def analyze_xray(file: UploadFile = File(..., description="Radiografía a 
     Recibe una imagen de rayos X y devuelve si hay indicios de neumonía
     según el modelo CNN entrenado.
     """
-    return await get_pneumonia_service().analyze_xray(file, file.filename)
+    try:
+        return await get_pneumonia_service().analyze_xray(file, file.filename)
+    except Exception as e:
+        # 👇 Captura el error y devuelve un JSON con status 500
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # 📈 MÉTRICAS NEUMONÍA

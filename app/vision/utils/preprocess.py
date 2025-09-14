@@ -14,4 +14,9 @@ def preprocess_image(file_path: str, target_size=(224, 224), for_batch: bool = T
     tensor = torch.tensor(img, dtype=torch.float32)
     if for_batch:
         tensor = tensor.unsqueeze(0)  # [1,1,H,W]
+        """Si for_batch es True, agrega una dimensión extra al inicio para indicar el batch size (el número de imágenes en el lote).
+                Quedaría con forma [1,1,224,224]:
+                1 → tamaño del lote (una sola imagen).
+                1 → canal de color (escala de grises).
+                224,224 → alto y ancho de la imagen."""
     return tensor

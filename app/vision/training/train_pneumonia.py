@@ -7,7 +7,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 def train_pneumonia_model(epochs=5, lr=0.001):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")  #si tienes GPU con CUDA, usará la GPU. Si no, se queda en GPU 
+
 
     # 📂 Directorios base
     BASE_DIR = Path(__file__).resolve().parent.parent  # app/vision
@@ -21,6 +22,11 @@ def train_pneumonia_model(epochs=5, lr=0.001):
     plot_path = plots_dir / "pneumonia_training.png"
 
     # 1. Data
+    """Llama a tu helper get_loaders.
+            Devuelve tres objetos DataLoader:
+            train_loader → para entrenar.
+            val_loader → para validar.
+            test_loader → para probar al final ("""
     train_loader, val_loader, test_loader = get_loaders()
 
     # 2. Modelo
