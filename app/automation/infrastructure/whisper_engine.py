@@ -1,3 +1,10 @@
+
+import os
+
+# 🔹 Asegurar que ffmpeg esté en el PATH (Windows)
+os.environ["PATH"] += os.pathsep + r"C:\Users\USER\ffmpeg-8.0-essentials_build\bin"
+
+
 import whisper
 from app.automation.domain.automation_interface import VoiceToTextInterface
 
