@@ -1,9 +1,8 @@
 from pysentimiento import create_analyzer
 
-# 📌 Cargamos el analizador de sentimientos ya preentrenado
-analyzer = create_analyzer(task="sentiment", lang="es")
+# Cache global (solo se inicializa la primera vez que se usa)
+_analyzer = None  
 
-# 📌 Mapeamos a nuestras categorías personalizadas
 MAPEO = {
     "POS": "Feliz",
     "NEG": "Negativo",
@@ -13,6 +12,11 @@ MAPEO = {
 def analizar_sentimiento(texto: str) -> str:
     """
     Analiza el sentimiento de un texto y lo traduce a nuestras categorías.
+    Se inicializa el modelo solo cuando se necesite (Lazy Loading).
     """
-    resultado = analyzer.predict(texto)
+    global _analyzer
+    if _analyzer is None:
+        _analyzer = create_analyzer(task="sentiment", lang="es")  # 👈 solo se carga la primera vez
+    
+    resultado = _analyzer.predict(texto)
     return MAPEO.get(resultado.output, "Neutral")

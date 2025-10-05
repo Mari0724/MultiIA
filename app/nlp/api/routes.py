@@ -7,8 +7,10 @@ from app.nlp.domain.schemas import ComentarioCreate, ComentarioResponse, TextoRe
 from app.nlp.application.summary_service import resumir_texto
 from app.nlp.infrastructure.db import get_db
 from app.nlp.api import chatbot_api   # 👈 lo importas para incluirlo
+from app.nlp.api import etl_api
 
 router = APIRouter(prefix="/nlp", tags=["NLP"])
+router.include_router(etl_api.router)
 
 # --- Rutas de comentarios ---
 @router.post("/", response_model=ComentarioResponse)

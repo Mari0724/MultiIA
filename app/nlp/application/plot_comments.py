@@ -1,7 +1,5 @@
 import os
-import matplotlib.pyplot as plt
 from app.nlp.infrastructure.db import SessionLocal
-from app.nlp.domain.models import Comentario
 
 # 📌 Carpeta para guardar las gráficas
 PLOTS_DIR = "app/nlp/infrastructure/plots"
@@ -12,6 +10,10 @@ def generar_graficas(save_plot=True):
     Genera gráficas de distribución de sentimientos en los comentarios.
     Si save_plot=False, no guarda imágenes (para los tests).
     """
+    from app.nlp.domain.models import Comentario  # 👈 import solo cuando se llama
+    import matplotlib.pyplot as plt              # 👈 import solo cuando se llama
+    from collections import Counter              # 👈 igual aquí
+
     db = SessionLocal()
     comentarios = db.query(Comentario).all()
     db.close()
@@ -22,10 +24,9 @@ def generar_graficas(save_plot=True):
         return {"error": "No hay comentarios con sentimientos"}
 
     # Conteo de cada sentimiento
-    from collections import Counter
     conteo = Counter(sentimientos)
 
-    # 📊 Gráfica de pastel
+    # 📊 Gráfica de barras
     plt.figure(figsize=(6, 6))
     plt.bar(conteo.keys(), conteo.values(), color=["green", "red", "blue"])
     plt.title("Distribución de Sentimientos en Comentarios")

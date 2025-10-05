@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from app.nlp.domain.models import Comentario
-from app.nlp.application.sentiment_service import analizar_sentimiento  # 👈 Importamos el modelo
 
 def crear_comentario(db: Session, texto: str, sentimiento: str = None, resumen: str = None):
     """
@@ -9,6 +8,7 @@ def crear_comentario(db: Session, texto: str, sentimiento: str = None, resumen: 
     """
     # Si no viene sentimiento manual, lo calculamos
     if not sentimiento:
+        from app.nlp.application.sentiment_service import analizar_sentimiento  # 👈 Importamos el modelo
         sentimiento = analizar_sentimiento(texto)
 
     # 1) Creamos un objeto Comentario (aún NO está en la BD)
