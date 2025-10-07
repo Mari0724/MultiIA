@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.recomendation.application.etl.extract_service import generar_dataset
 from app.recomendation.application.etl.transform_service import transform_data
-
+from app.recomendation.application.etl.load_service import load_data
 
 
 router = APIRouter(prefix="/recomendation", tags=["Recomendation"])
@@ -16,3 +16,11 @@ def generar_datos(cantidad: int = 3000):
 def transformar_datos():
     ruta = transform_data()
     return {"message": "Transformación completada", "archivo": ruta}
+
+@router.post("/load-data")
+def cargar_datos():
+    """
+    Carga los datos limpios (compras_clean.csv) en PostgreSQL.
+    """
+    resultado = load_data()
+    return {"message": resultado}

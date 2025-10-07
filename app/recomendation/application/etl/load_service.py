@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 from sqlalchemy import text
-from app.recommendation.infrastructure.db_connection import get_engine
+from app.recomendation.infrastructure.db_connection import get_engine
 
 def load_data():
     """
