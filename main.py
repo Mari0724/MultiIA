@@ -28,7 +28,7 @@ def create_app() -> FastAPI:
     # Incluye routers
     app.include_router(nlp_router)
     app.include_router(vision_router)
-    app.include_router(recommendation_router, prefix="/recommendation", tags=["Recomendación"])
+    app.include_router(recommendation_router)
     app.include_router(prediction_router)
     app.include_router(automation_router)
     return app
