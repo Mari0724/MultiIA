@@ -33,6 +33,7 @@ defusedxml==0.7.1
 dill==0.3.8
 emoji==2.14.1
 executing==2.2.0
+Faker==37.11.0
 fastapi==0.116.1
 fastjsonschema==2.21.2
 ffmpeg-python==0.2.0

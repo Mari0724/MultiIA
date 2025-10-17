@@ -26,3 +26,7 @@ sentiment_model/
 app/vision/data/
 app/vision/uploads/
 app/vision/models/
+
+# Datos del chatbot y ETL (resultados, no el código)
+data/
+chatbot_data.json

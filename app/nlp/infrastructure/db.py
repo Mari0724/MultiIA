@@ -23,3 +23,17 @@ def get_db():
         raise
     finally:
         db.close()
+
+class DBConnection:
+    """
+    Clase para manejar la conexión a la base de datos.
+    Abre y cierra la sesión automáticamente.
+    """
+    def __init__(self):
+        self.session = SessionLocal()
+
+    def __enter__(self):
+        return self.session
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.session.close()
