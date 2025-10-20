@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from app.recomendation.application.etl.extract_service import generar_dataset
 from app.recomendation.application.etl.transform_service import transform_data
 from app.recomendation.application.etl.load_service import load_data
+from app.recomendation.application.etl.etl_pipeline import run_etl_pipeline
 
 
 router = APIRouter(prefix="/recomendation", tags=["Recomendation"])
@@ -23,4 +24,13 @@ def cargar_datos():
     Carga los datos limpios (compras_clean.csv) en PostgreSQL.
     """
     resultado = load_data()
+    return {"message": resultado}
+
+
+@router.post("/run-etl")
+def ejecutar_pipeline():
+    """
+    Ejecuta todo el pipeline ETL (Extract → Transform → Load).
+    """
+    resultado = run_etl_pipeline()
     return {"message": resultado}

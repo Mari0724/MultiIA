@@ -48,16 +48,17 @@ def transform_data():
     print("Columnas detectadas:", df.columns.tolist())
 
     # 🧹 3️⃣ Limpieza básica
-    #          Quita espacios  minusculas
     df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
-    df = df.drop_duplicates()   # → elimina cualquier fila repetida exacta.
-    df = df.dropna(how="all")   # → elimina filas donde todas las columnas están vacías (nulos o NaN).
+
+    # ❗ Corregido: eliminar duplicados solo si el id_compra se repite exactamente
+    # (no eliminar compras válidas del mismo cliente o producto)
+    df = df.drop_duplicates(subset=["id_compra"])   # → elimina solo duplicados exactos por ID
+    df = df.dropna(how="all")                       # → elimina filas donde todas las columnas están vacías (nulos o NaN)
 
     # eliminar duplicados solo por cliente o producto, se puede hacer más específico:
     # df = df.drop_duplicates(subset=["cliente", "producto"])
 
     # 🔢 4️⃣ Conversión de tipos inicial (antes de validar)
-    # Si hay errores de tipo, Pandas los convierte a NaN para filtrarlos después.
     df["precio"] = pd.to_numeric(df["precio"], errors="coerce")
     df["fecha_compra"] = pd.to_datetime(df["fecha_compra"], errors="coerce")
 
